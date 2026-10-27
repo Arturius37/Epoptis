@@ -15,7 +15,13 @@ Camera access requires a secure browser context (`localhost` or HTTPS). With Nod
 ```sh
 npx serve .
 ```
+## Run locally second way
 
+Copy this and paste in any browser. And please wait there for downloading models.
+
+```sh
+https://epoptis.netlify.app/
+```
 Open the local URL in a modern browser and allow camera access. An internet connection is required to download the JavaScript runtimes and model weights on first use. The models are cached by the browser where supported.
 
 ## Features
