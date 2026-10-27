@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#a7aaad" />
+    <title>Epoptis — Live Vision</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="teach.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Epoptis home"><span class="brand-mark">E</span><span>Epoptis <small>LIVE VISION</small></span></a>
+        <div class="top-status"><span class="pulse"></span><span id="statusText">SYSTEM READY</span></div>
+        <button class="icon-button" id="settingsButton" aria-label="Open settings" title="Settings">☷</button>
+      </header>
+      <section class="workspace">
+        <aside class="intro">
+          <div class="eyebrow"><span></span> YOUR WORLD, IN REAL TIME</div>
+          <h1>See what’s<br /><em>moving.</em></h1>
+          <p class="lead">A live lens for the everyday. Objects, motion and changes in your scene, read directly from your camera.</p>
+          <div class="mode-row"><span class="mode-dot"></span><span id="modeLabel">STANDBY</span><span class="mode-line"></span><span class="mode-caption">LOCAL PROCESSING</span></div>
+          <div class="readout-grid">
+            <div class="readout">
+              <div class="readout-label">OBJECTS</div>
+              <strong id="objectCount">—</strong>
+              <span id="objectHint">Awaiting camera</span>
+            </div>
+            <div class="readout">
+              <div class="readout-label">MOTION</div>
+              <strong id="motionValue">—</strong>
+              <span id="motionHint">Awaiting camera</span>
+            </div>
+            <div class="readout">
+              <div class="readout-label">SCENE CHANGE</div>
+              <strong id="sceneValue">—</strong>
+              <span id="sceneHint">Set a reference frame</span>
+            </div>
+            <div class="readout">
+              <div class="readout-label">FRAME RATE</div>
+              <strong id="fpsValue">—</strong>
+              <span>Analysis speed</span>
+            </div>
+          </div>
+          <div class="legend">
+            <div><span class="legend-box"></span><span>Recognized object</span></div>
+            <div><span class="legend-arrow">↗</span><span>Motion direction</span></div>
+            <div><span class="legend-pixels"></span><span>Moving pixels</span></div>
+          </div>
+          <p class="privacy"><span>◉</span> Video stays on this device. No recording or upload.</p>
+        </aside>
+        <section class="camera-panel" aria-label="Live camera analysis">
+          <div class="camera-frame" id="cameraFrame">
+            <video id="video" playsinline muted></video>
+            <canvas id="overlay"></canvas>
+            <canvas id="motionCanvas" hidden></canvas>
+            <div class="frame-corners"><i></i><i></i><i></i><i></i></div>
+            <div class="camera-topline"><span id="liveBadge"><b></b> LIVE FEED</span><span id="cameraTime">--:--:--</span></div>
+            <div class="camera-id">CAM <span id="cameraId">01</span><span class="id-sep">/</span> <span id="cameraFacing">FRONT</span></div>
+            <div class="welcome" id="welcome">
+              <div class="lens-icon"><span></span><i></i></div>
+              <h2>Your live view<br />starts here.</h2>
+              <p>Turn on your camera to begin<br />seeing what’s around you.</p>
+              <button class="primary-button" id="startButton"><span>Start camera</span><span>↗</span></button>
+              <div class="welcome-note"><span>⌁</span> Camera access is only used while active</div>
+            </div>
+            <div class="loading-state hidden" id="loadingState"><span class="spinner"></span><span id="loadingText">Warming up the lens…</span></div>
+            <div class="camera-bottomline"><span id="resolution">NO SIGNAL</span><span class="record-indicator"><i></i> <span id="analysisLabel">ANALYSIS STANDBY</span></span></div>
+          </div>
+          <div class="camera-controls">
+            <div class="control-group">
+              <button class="control-button" id="switchButton" disabled title="Switch camera"><span>⇄</span> SWITCH</button>
+              <button class="control-button" id="pauseButton" disabled title="Pause analysis"><span>Ⅱ</span> PAUSE</button>
+              <button class="control-button reference-button" id="baselineButton" disabled title="Save this view as the scene reference"><span>⌖</span> REFERENCE</button>
+              <button class="control-button stop-button" id="stopButton" disabled title="Stop camera and end the session"><span>×</span> STOP</button>
+            </div>
+            <div class="control-group right-controls">
+              <label class="toggle-control">
+                <span>Motion</span>
+                <input type="checkbox" id="motionToggle" checked />
+                <i></i>
+              </label>
+              <label class="toggle-control">
+                <span>Objects</span>
+                <input type="checkbox" id="objectToggle" checked />
+                <i></i>
+              </label>
+              <label class="toggle-control extended-toggle" title="Broader on-device detection for everyday items such as pens, glasses, keys and bottles">
+                <span>Extended</span>
+                <input type="checkbox" id="extendedToggle" checked />
+                <i></i>
+              </label>
+              <button class="teach-button" id="teachButton" disabled title="Teach the camera an item">＋ TEACH</button>
+              <button class="capture-button" id="captureButton" disabled title="Save a snapshot"><span>◉</span></button>
+            </div>
+          </div>
+          <div class="camera-footnote"><span>BUILT FOR THE MOMENT</span><span>MOVE SOMETHING IN FRAME TO EXPLORE <b>↗</b></span></div>
+        </section>
+      </section>
+      <footer><span>Epoptis <span class="footer-sep">/</span> CAMERA INTELLIGENCE</span><span>MADE TO NOTICE THE DETAILS</span><span>LOCAL · PRIVATE · LIVE</span></footer>
+    </main>
+    <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+      <form method="dialog" id="settingsForm">
+        <div class="settings-head">
+          <div>
+            <div class="dialog-eyebrow">TUNE THE LENS</div>
+            <h2 id="settingsTitle">Session settings</h2>
+          </div>
+          <button class="settings-close" id="closeSettingsButton" type="button" aria-label="Close settings">×</button>
+        </div>
+        <p class="settings-intro">Adjust how sensitive the live analysis feels. These settings stay in this browser session.</p>
+        <label class="range-setting" for="confidenceRange"><span><strong>Object confidence</strong><small>Higher values show fewer, more confident detections.</small></span><output id="confidenceValue" for="confidenceRange">30%</output></label>
+        <input class="range-input" id="confidenceRange" type="range" min="10" max="80" step="5" value="30" />
+        <label class="range-setting" for="motionSensitivityRange"><span><strong>Motion sensitivity</strong><small>Lower values pick up smaller visual changes.</small></span><output id="motionSensitivityValue" for="motionSensitivityRange">28</output></label>
+        <input class="range-input" id="motionSensitivityRange" type="range" min="12" max="55" step="1" value="28" />
+        <label class="range-setting custom-label-setting" for="customObjectsInput"><span><strong>Extra objects to recognize</strong><small>Comma-separated labels for Extended mode, such as pen, glasses, bottle, charger.</small></span></label>
+        <input class="custom-objects-input" id="customObjectsInput" type="text" maxlength="240" placeholder="pen, glasses, bottle, charger" autocomplete="off" />
+        <div class="settings-note">
+          <span>ⓘ</span>
+          <p>Motion is estimated from frame differences. Camera shake, lighting changes, and shadows can affect the result. Extended recognition downloads an additional model on first use.</p>
+        </div>
+        <div class="dialog-actions">
+          <button class="dialog-save settings-done" id="doneSettingsButton" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="teach-dialog" id="teachDialog">
+      <form id="teachForm" method="dialog">
+        <div class="dialog-eyebrow">LOCAL ITEM MEMORY</div>
+        <h2>Teach this item</h2>
+        <p id="teachDescription">Keep the item in view and give it a name. Add more views later to improve matching.</p>
+        <label for="itemName">ITEM NAME</label>
+        <input id="itemName" name="itemName" maxlength="32" placeholder="e.g. my blue mug" required autocomplete="off" />
+        <div class="dialog-actions">
+          <button class="dialog-cancel" id="cancelTeach" type="button">Cancel</button>
+          <button class="dialog-save" type="submit">Save this view ↗</button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
